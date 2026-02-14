@@ -69,10 +69,34 @@
 
 ### 🎬 功能演示
 
-<!-- 截图占位符 - 请添加实际截图到 docs/images/ 目录 -->
-| 论文列表 | 结构化笔记 | 思维导图 | Auto-Scholar |
-|:-------:|:---------:|:-------:|:------------:|
-| ![Dashboard](docs/images/dashboard.png) | ![Notes](docs/images/paper-detail.png) | ![Mindmap](docs/images/mindmap.png) | ![Scholar](docs/images/auto-scholar.png) |
+#### 论文管理与分析
+
+<table>
+<tr>
+<td width="50%" align="center">
+  <b>📚 论文库主页</b><br/>
+  <img src="docs/images/main.png" width="100%"/><br/>
+  <sub>论文列表、搜索筛选、标签管理</sub>
+</td>
+<td width="50%" align="center">
+  <b>📝 结构化笔记</b><br/>
+  <img src="docs/images/note.png" width="100%"/><br/>
+  <sub>8 维度深度总结、问题定义、方法论</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+  <b>🧠 思维导图</b><br/>
+  <img src="docs/images/mind.png" width="100%"/><br/>
+  <sub>自动生成可视化思维导图</sub>
+</td>
+<td width="50%" align="center">
+  <b>💬 智能问答</b><br/>
+  <img src="docs/images/chat.png" width="100%"/><br/>
+  <sub>RAG 检索、@mention 语法、多论文对比</sub>
+</td>
+</tr>
+</table>
 
 ### 🚀 快速开始
 
@@ -98,6 +122,11 @@ streamlit run app.py
 ### 📖 使用指南
 
 #### 论文上传
+
+<p align="center">
+  <img src="docs/images/upload.png" width="700px"/>
+</p>
+
 1. 点击侧边栏「📤 上传论文」
 2. 拖拽或选择 PDF 文件
 3. 点击「开始处理」，等待 AI 分析完成
@@ -120,7 +149,58 @@ streamlit run app.py
 
 详细使用说明请参考 [Auto-Scholar 使用指南](docs/guides/AUTO_SCHOLAR_GUIDE.md)
 
+#### 🤖 Auto-Scholar 功能展示
+
+<table>
+<tr>
+<td width="50%" align="center">
+  <b>📊 论文抓取与评分</b><br/>
+  <img src="docs/images/catch.png" width="100%"/><br/>
+  <sub>S/A/B 分级推荐、会议徽章、机构徽章</sub>
+</td>
+<td width="50%" align="center">
+  <b>⚙️ 关键词配置</b><br/>
+  <img src="docs/images/keywords.png" width="100%"/><br/>
+  <sub>核心关键词、前沿关键词配置</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+  <b>📥 自动导入论文库</b><br/>
+  <img src="docs/images/auto-import.png" width="100%"/><br/>
+  <sub>收藏论文一键导入、自动分析</sub>
+</td>
+<td width="50%" align="center">
+  <b>📈 时间趋势分析</b><br/>
+  <img src="docs/images/catch-ana-time.png" width="100%"/><br/>
+  <sub>按日期统计论文发表数量</sub>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center">
+  <b>📊 数据分析与可视化</b><br/>
+  <table width="100%">
+    <tr>
+      <td width="50%" align="center">
+        <img src="docs/images/catch-ana-keyword.png" width="100%"/><br/>
+        <sub>关键词分布与热度分析</sub>
+      </td>
+      <td width="50%" align="center">
+        <img src="docs/images/catch-ana-org.png" width="100%"/><br/>
+        <sub>顶会顶刊与知名机构统计</sub>
+      </td>
+    </tr>
+  </table>
+</td>
+</tr>
+</table>
+
 #### 标签管理
+
+<p align="center">
+  <img src="docs/images/label.png" width="700px"/>
+</p>
+
 - **层级标签**：支持父子标签关系，构建知识体系
 - **重复检测**：自动检测相似标签，一键合并
 - **颜色自定义**：为标签设置颜色，便于视觉区分
@@ -332,6 +412,37 @@ pip install streamlit-mermaid
 </tr>
 </table>
 
+### 🎬 Feature Showcase
+
+#### Paper Management & Analysis
+
+<table>
+<tr>
+<td width="50%" align="center">
+  <b>📚 Paper Library</b><br/>
+  <img src="docs/images/main.png" width="100%"/><br/>
+  <sub>Paper list, search & filter, tag management</sub>
+</td>
+<td width="50%" align="center">
+  <b>📝 Structured Notes</b><br/>
+  <img src="docs/images/note.png" width="100%"/><br/>
+  <sub>8-dimension deep summary, problem definition, methodology</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+  <b>🧠 Mind Map</b><br/>
+  <img src="docs/images/mind.png" width="100%"/><br/>
+  <sub>Auto-generated visual mind map</sub>
+</td>
+<td width="50%" align="center">
+  <b>💬 Smart Q&A</b><br/>
+  <img src="docs/images/chat.png" width="100%"/><br/>
+  <sub>RAG retrieval, @mention syntax, multi-paper comparison</sub>
+</td>
+</tr>
+</table>
+
 ### 🚀 Quick Start
 
 ```bash
@@ -353,6 +464,11 @@ Visit http://localhost:8501 🎉
 ### 📖 Usage
 
 #### Upload Papers
+
+<p align="center">
+  <img src="docs/images/upload.png" width="700px"/>
+</p>
+
 1. Click "📤 Upload Paper" in sidebar
 2. Drag & drop or select PDF file
 3. Click "Start Processing" and wait for AI analysis
@@ -374,6 +490,52 @@ Visit http://localhost:8501 🎉
 7. Check "📊 Trends" for real-time trend analysis (Time Trends/Keyword Analysis/Heatmap)
 
 See [Auto-Scholar Guide](docs/guides/AUTO_SCHOLAR_GUIDE.md) for details.
+
+#### 🤖 Auto-Scholar Feature Showcase
+
+<table>
+<tr>
+<td width="50%" align="center">
+  <b>📊 Paper Crawling & Scoring</b><br/>
+  <img src="docs/images/catch.png" width="100%"/><br/>
+  <sub>S/A/B tier recommendations, conference badges, institution badges</sub>
+</td>
+<td width="50%" align="center">
+  <b>⚙️ Keyword Configuration</b><br/>
+  <img src="docs/images/keywords.png" width="100%"/><br/>
+  <sub>Core keywords and frontier keywords setup</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+  <b>📥 Auto Import to Library</b><br/>
+  <img src="docs/images/auto-import.png" width="100%"/><br/>
+  <sub>One-click import of favorited papers with auto-analysis</sub>
+</td>
+<td width="50%" align="center">
+  <b>📈 Time Trend Analysis</b><br/>
+  <img src="docs/images/catch-ana-time.png" width="100%"/><br/>
+  <sub>Daily publication statistics</sub>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center">
+  <b>📊 Data Analytics & Visualization</b><br/>
+  <table width="100%">
+    <tr>
+      <td width="50%" align="center">
+        <img src="docs/images/catch-ana-keyword.png" width="100%"/><br/>
+        <sub>Keyword distribution and popularity analysis</sub>
+      </td>
+      <td width="50%" align="center">
+        <img src="docs/images/catch-ana-org.png" width="100%"/><br/>
+        <sub>Top conferences and prestigious institutions statistics</sub>
+      </td>
+    </tr>
+  </table>
+</td>
+</tr>
+</table>
 
 ### 🛠️ Tech Stack
 
