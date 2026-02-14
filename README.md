@@ -118,7 +118,7 @@ streamlit run app.py
 6. 在「📈 统计分析」中查看论文质量分析（分数/顶会/机构/交叉分析）
 7. 在「📊 发表趋势」中查看实时趋势分析（时间趋势/关键词分析/热力图）
 
-详细使用说明请参考 [Auto-Scholar 使用指南](docs/AUTO_SCHOLAR_GUIDE.md)
+详细使用说明请参考 [Auto-Scholar 使用指南](docs/guides/AUTO_SCHOLAR_GUIDE.md)
 
 #### 标签管理
 - **层级标签**：支持父子标签关系，构建知识体系
@@ -205,13 +205,17 @@ paperbrain/
 │   ├── prompts.py                  # Prompt 模板
 │   └── helpers.py                  # 辅助函数
 └── docs/                           # 文档
-    ├── CHANGELOG.md                # 更新日志
-    ├── TECHNICAL_DOCUMENTATION.md  # 技术文档
-    ├── AUTO_SCHOLAR_GUIDE.md       # Auto-Scholar 指南
-    └── FEATURE_VENUE_INSTITUTION.md # 顶会机构功能说明
+    ├── README.md                   # 文档索引
+    ├── principle.md                # 文档管理规范
+    ├── CHANGELOG.md                # 主更新日志
+    ├── guides/                     # 用户指南
+    ├── technical/                  # 技术文档
+    ├── changelogs/                 # 版本更新日志
+    ├── features/                   # 功能说明
+    └── development/                # 开发文档
 ```
 
-详细架构请参考 [技术文档](docs/TECHNICAL_DOCUMENTATION.md)
+详细架构请参考 [技术文档](docs/technical/TECHNICAL_DOCUMENTATION.md)
 
 ### ❓ 常见问题
 
@@ -233,7 +237,7 @@ pip install streamlit-mermaid
 <details>
 <summary>Auto-Scholar 如何配置定时任务？</summary>
 
-参考 [Auto-Scholar 使用指南](docs/AUTO_SCHOLAR_GUIDE.md) 中的定时任务配置部分。
+参考 [Auto-Scholar 使用指南](docs/guides/AUTO_SCHOLAR_GUIDE.md) 中的定时任务配置部分。
 </details>
 
 <details>
@@ -244,10 +248,12 @@ pip install streamlit-mermaid
 
 ### 📚 文档
 
-- [更新日志 (CHANGELOG)](docs/CHANGELOG.md) - 版本历史与功能更新
-- [技术文档 (TECHNICAL_DOCUMENTATION)](docs/TECHNICAL_DOCUMENTATION.md) - 详细架构与 API
-- [Auto-Scholar 使用指南](docs/AUTO_SCHOLAR_GUIDE.md) - 论文监控功能说明
-- [顶会机构功能说明](docs/FEATURE_VENUE_INSTITUTION.md) - 会议与机构识别
+- [文档中心](docs/README.md) - 完整文档索引
+- [更新日志](docs/CHANGELOG.md) - 版本历史与功能更新
+- [技术文档](docs/technical/TECHNICAL_DOCUMENTATION.md) - 详细架构与 API
+- [Auto-Scholar 使用指南](docs/guides/AUTO_SCHOLAR_GUIDE.md) - 论文监控功能说明
+- [顶会机构功能说明](docs/features/VENUE_INSTITUTION.md) - 会议与机构识别
+- [文档管理规范](docs/principle.md) - 文档组织和更新规范
 
 ---
 
@@ -344,7 +350,7 @@ Visit http://localhost:8501 🎉
 6. Check "📈 Statistics" for quality analysis (Score/Conference/Institution/Cross Analysis)
 7. Check "📊 Trends" for real-time trend analysis (Time Trends/Keyword Analysis/Heatmap)
 
-See [Auto-Scholar Guide](docs/AUTO_SCHOLAR_GUIDE.md) for details.
+See [Auto-Scholar Guide](docs/guides/AUTO_SCHOLAR_GUIDE.md) for details.
 
 ### 🛠️ Tech Stack
 
@@ -374,10 +380,12 @@ See [Auto-Scholar Guide](docs/AUTO_SCHOLAR_GUIDE.md) for details.
 
 ### 📖 Documentation
 
+- [Documentation Center](docs/README.md) - Complete documentation index
 - [CHANGELOG](docs/CHANGELOG.md) - Version history & feature updates
-- [Technical Documentation](docs/TECHNICAL_DOCUMENTATION.md) - Detailed architecture & API
-- [Auto-Scholar Guide](docs/AUTO_SCHOLAR_GUIDE.md) - Paper monitoring features
-- [Conference & Institution Feature](docs/FEATURE_VENUE_INSTITUTION.md) - Recognition system
+- [Technical Documentation](docs/technical/TECHNICAL_DOCUMENTATION.md) - Detailed architecture & API
+- [Auto-Scholar Guide](docs/guides/AUTO_SCHOLAR_GUIDE.md) - Paper monitoring features
+- [Conference & Institution Feature](docs/features/VENUE_INSTITUTION.md) - Recognition system
+- [Documentation Guidelines](docs/principle.md) - Documentation organization & update rules
 
 ---
 
