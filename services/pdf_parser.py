@@ -126,6 +126,13 @@ class PDFParser:
         image_dir = Path(config.IMAGES_DIR) / str(paper_id)
         image_dir.mkdir(parents=True, exist_ok=True)
 
+        # 更严格的尺寸过滤阈值（像素）
+        MIN_WIDTH = 200   # 提高到 200
+        MIN_HEIGHT = 150  # 提高到 150
+        MIN_SIZE_KB = 10  # 提高到 10KB
+        MIN_ASPECT_RATIO = 0.3  # 最小宽高比（避免过窄的图）
+        MAX_ASPECT_RATIO = 5.0  # 最大宽高比（避免过宽的图）
+
         for page_num, page in enumerate(doc, start=1):
             image_list = page.get_images()
 
@@ -135,6 +142,25 @@ class PDFParser:
                 image_bytes = base_image["image"]
                 image_ext = base_image["ext"]
 
+                # 获取图片尺寸
+                width = base_image.get("width", 0)
+                height = base_image.get("height", 0)
+                size_kb = len(image_bytes) / 1024
+
+                # 计算宽高比
+                aspect_ratio = width / height if height > 0 else 0
+
+                # 过滤条件：
+                # 1. 尺寸太小（图标、符号）
+                # 2. 文件太小
+                # 3. 宽高比异常（过窄或过宽的装饰性图片）
+                if (width < MIN_WIDTH or
+                    height < MIN_HEIGHT or
+                    size_kb < MIN_SIZE_KB or
+                    aspect_ratio < MIN_ASPECT_RATIO or
+                    aspect_ratio > MAX_ASPECT_RATIO):
+                    continue
+
                 # 保存图片
                 image_filename = f"page{page_num}_img{img_index}.{image_ext}"
                 image_path = image_dir / image_filename
@@ -142,13 +168,16 @@ class PDFParser:
                 with open(image_path, "wb") as f:
                     f.write(image_bytes)
 
-                # 查找 Caption
+                # 查找 Caption（仅用于分类，不用于过滤）
                 caption = self._find_image_caption(page, img_index)
 
                 saved_images.append({
                     "page": page_num,
                     "path": str(image_path),
-                    "caption": caption
+                    "caption": caption,
+                    "width": width,
+                    "height": height,
+                    "size_kb": size_kb
                 })
 
         doc.close()

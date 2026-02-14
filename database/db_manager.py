@@ -146,6 +146,15 @@ class DatabaseManager:
                 # 保存文件路径用于删除
                 file_path = paper.file_path
 
+                # 重置关联的 ArxivPaper 导入状态（如果存在）
+                arxiv_paper = session.query(ArxivPaper).filter(
+                    ArxivPaper.imported_paper_id == paper_id
+                ).first()
+                if arxiv_paper:
+                    arxiv_paper.is_imported = False
+                    arxiv_paper.imported_paper_id = None
+                    print(f"✓ 已重置 ArxivPaper 导入状态 (arxiv_id: {arxiv_paper.arxiv_id})")
+
                 # 删除数据库记录（会级联删除关联的标签和图片记录）
                 session.delete(paper)
                 session.commit()
@@ -749,6 +758,129 @@ class DatabaseManager:
                 'favorited': favorited_count,
                 'can_cleanup': arxiv_count - favorited_count - imported_count
             }
+        finally:
+            session.close()
+
+    # ========== 质量分析查询方法（P1阶段新增）==========
+
+    def get_venue_statistics(self, min_score: float = 0.0) -> List[dict]:
+        """
+        获取会议/期刊的论文数量和平均分
+
+        Args:
+            min_score: 最低分数筛选
+
+        Returns:
+            [{'venue': str, 'count': int, 'avg_score': float}, ...]
+        """
+        session = self.get_session()
+        try:
+            from sqlalchemy import func
+
+            results = session.query(
+                ArxivPaper.venue,
+                func.count(ArxivPaper.id).label('count'),
+                func.avg(ArxivPaper.score).label('avg_score')
+            ).filter(
+                ArxivPaper.venue.isnot(None),
+                ArxivPaper.venue != '',
+                ArxivPaper.score >= min_score
+            ).group_by(ArxivPaper.venue).order_by(
+                func.count(ArxivPaper.id).desc()
+            ).all()
+
+            return [{'venue': r.venue, 'count': r.count, 'avg_score': float(r.avg_score)}
+                    for r in results]
+        finally:
+            session.close()
+
+    def get_institution_statistics(self, min_score: float = 0.0) -> List[dict]:
+        """
+        获取机构的论文数量和平均分
+
+        Args:
+            min_score: 最低分数筛选
+
+        Returns:
+            [{'institution': str, 'count': int, 'avg_score': float}, ...]
+        """
+        session = self.get_session()
+        try:
+            papers = session.query(ArxivPaper).filter(
+                ArxivPaper.institutions.isnot(None),
+                ArxivPaper.score >= min_score
+            ).all()
+
+            # 解析 institutions JSON 字段并统计
+            institution_stats = {}
+            for paper in papers:
+                if paper.institutions:
+                    for inst in paper.institutions:
+                        if inst not in institution_stats:
+                            institution_stats[inst] = {'count': 0, 'scores': []}
+                        institution_stats[inst]['count'] += 1
+                        institution_stats[inst]['scores'].append(paper.score)
+
+            # 计算平均分
+            results = []
+            for inst, data in institution_stats.items():
+                avg_score = sum(data['scores']) / len(data['scores'])
+                results.append({
+                    'institution': inst,
+                    'count': data['count'],
+                    'avg_score': avg_score
+                })
+
+            # 按论文数量排序
+            results.sort(key=lambda x: x['count'], reverse=True)
+            return results
+        finally:
+            session.close()
+
+    def get_author_statistics(self, top_n: int = 20) -> List[dict]:
+        """
+        获取高产作者排行
+
+        Args:
+            top_n: 返回前N个
+
+        Returns:
+            [{'author': str, 'count': int, 'avg_score': float}, ...]
+        """
+        session = self.get_session()
+        try:
+            papers = session.query(ArxivPaper).all()
+
+            # 解析 authors JSON 字段并统计
+            author_stats = {}
+            for paper in papers:
+                if paper.authors:
+                    for author in paper.authors:
+                        # 处理不同的作者格式
+                        if isinstance(author, dict):
+                            author_name = author.get('name', '')
+                        else:
+                            author_name = str(author)
+
+                        if author_name:
+                            if author_name not in author_stats:
+                                author_stats[author_name] = {'count': 0, 'scores': []}
+                            author_stats[author_name]['count'] += 1
+                            author_stats[author_name]['scores'].append(paper.score)
+
+            # 计算平均分
+            results = []
+            for author, data in author_stats.items():
+                avg_score = sum(data['scores']) / len(data['scores'])
+                results.append({
+                    'author': author,
+                    'count': data['count'],
+                    'avg_score': avg_score
+                })
+
+            # 按论文数量排序，取前N个
+            results.sort(key=lambda x: x['count'], reverse=True)
+            return results[:top_n]
         finally:
             session.close()
 

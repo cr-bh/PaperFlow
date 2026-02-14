@@ -1,7 +1,7 @@
 # PaperBrain 技术文档
 
-> **版本**: 1.0.0
-> **最后更新**: 2024年
+> **版本**: 1.1.0
+> **最后更新**: 2026-02-13
 > **文档语言**: 中文
 
 ---
@@ -53,7 +53,8 @@
 │  ├─ arXiv 论文爬取                                               │
 │  ├─ 关键词筛选                                                   │
 │  ├─ LLM 智能评分                                                 │
-│  └─ 一键导入论文库                                               │
+│  ├─ 论文收藏管理                                                 │
+│  └─ 一键导入论文库（✨ v1.1.0 新增）                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1504,6 +1505,175 @@ class Tagger:
             for tag_name in tag_names:
                 tag = db_manager.create_tag(name=tag_name, category=category)
                 db_manager.add_tag_to_paper(paper_id, tag.id)
+```
+
+### 4.2.5 Arxiv 下载服务
+
+`services/arxiv_downloader.py` 负责从 Arxiv 下载 PDF 文件。
+
+```python
+class ArxivDownloader:
+    """Arxiv PDF 下载器"""
+
+    def __init__(self):
+        self.base_url = "https://arxiv.org/pdf"
+        self.max_retries = 3
+        self.retry_delay = 2.0
+
+    def download_pdf(self, arxiv_id: str, save_dir: str) -> Optional[str]:
+        """
+        下载 Arxiv 论文 PDF
+
+        Args:
+            arxiv_id: Arxiv ID（如 2401.12345 或 2401.12345v1）
+            save_dir: 保存目录
+
+        Returns:
+            下载的 PDF 文件路径，失败返回 None
+        """
+```
+
+**核心特性**：
+- **版本号处理**：自动清理 arxiv_id 中的版本号（如 `2401.12345v1` → `2401.12345`）
+- **重试机制**：最多重试 3 次，间隔 2 秒
+- **文件去重**：如果文件已存在，直接返回路径
+- **流式下载**：使用 `stream=True` 支持大文件下载
+
+**使用示例**：
+```python
+from services.arxiv_downloader import arxiv_downloader
+
+pdf_path = arxiv_downloader.download_pdf(
+    arxiv_id="2401.12345",
+    save_dir="data/papers"
+)
+```
+
+### 4.2.6 通用论文处理器
+
+`services/paper_processor.py` 提供通用的论文处理流程，从 `upload_page.py` 中提取核心逻辑。
+
+```python
+class PaperProcessor:
+    """论文处理器（通用）"""
+
+    def process_paper_from_file(
+        self,
+        pdf_path: str,
+        progress_callback: Optional[Callable[[int, str], None]] = None
+    ) -> dict:
+        """
+        处理论文文件（通用函数）
+
+        Args:
+            pdf_path: PDF 文件路径
+            progress_callback: 进度回调函数 callback(progress: int, message: str)
+
+        Returns:
+            {
+                'success': bool,
+                'paper': Paper 对象（成功时）,
+                'error': str（失败时）
+            }
+        """
+```
+
+**处理流程**（11 个阶段）：
+1. **解析 PDF** (20%) - 提取文本、元数据、图片信息
+2. **生成总结** (40%) - 调用 LLM 生成 8 维度结构化总结
+3. **生成思维导图** (55%) - 生成 Mermaid.js 代码
+4. **生成标签** (70%) - 生成三维度标签
+5. **保存数据库** (80%) - 创建或更新 Paper 记录
+6. **提取图片** (85%) - 提取关键图片
+7. **向量化** (95%) - 文本分块并存储到 ChromaDB
+8. **完成** (100%)
+
+**核心特性**：
+- **进度回调**：支持自定义进度回调函数，便于 UI 显示
+- **去重检测**：自动检测同名论文，更新而非重复创建
+- **无 UI 依赖**：纯业务逻辑，不依赖 Streamlit
+- **完整错误处理**：捕获所有异常并返回友好错误信息
+
+**使用示例**：
+```python
+from services.paper_processor import paper_processor
+
+def update_progress(progress: int, message: str):
+    print(f"[{progress}%] {message}")
+
+result = paper_processor.process_paper_from_file(
+    pdf_path="data/papers/2401.12345.pdf",
+    progress_callback=update_progress
+)
+
+if result['success']:
+    paper = result['paper']
+    print(f"处理成功: {paper.title}")
+else:
+    print(f"处理失败: {result['error']}")
+```
+
+### 4.2.7 论文导入服务
+
+`services/paper_importer.py` 负责将 Auto-Scholar 中的论文导入到主论文库。
+
+```python
+class PaperImporter:
+    """论文导入服务（从 Auto-Scholar 到主论文库）"""
+
+    def import_arxiv_paper(
+        self,
+        arxiv_paper_id: int,
+        progress_callback: Optional[Callable[[int, str], None]] = None
+    ) -> dict:
+        """
+        导入 Arxiv 论文到主论文库
+
+        Args:
+            arxiv_paper_id: ArxivPaper 表的 ID
+            progress_callback: 进度回调函数
+
+        Returns:
+            {
+                'success': bool,
+                'paper': Paper 对象（成功时）,
+                'message': str,
+                'is_duplicate': bool,
+                'error': str（失败时）
+            }
+        """
+```
+
+**导入流程**：
+1. **获取 ArxivPaper 记录** (5%)
+2. **检查是否已导入** - 如果已导入，直接返回
+3. **下载 PDF** (10%) - 调用 `arxiv_downloader`
+4. **处理论文** (20-95%) - 调用 `paper_processor`
+5. **更新状态** (98%) - 标记 `is_imported = True`
+6. **完成** (100%)
+
+**核心特性**：
+- **重复导入检测**：检查 `ArxivPaper.is_imported` 标志
+- **进度转发**：将处理器的 0-100% 映射到总进度的 20-95%
+- **状态同步**：更新 `ArxivPaper.imported_paper_id` 建立关联
+- **完整错误处理**：处理下载失败、处理失败等各种异常
+
+**使用示例**：
+```python
+from services.paper_importer import paper_importer
+
+result = paper_importer.import_arxiv_paper(
+    arxiv_paper_id=123,
+    progress_callback=lambda p, m: print(f"[{p}%] {m}")
+)
+
+if result['success']:
+    if result['is_duplicate']:
+        print("论文已导入")
+    else:
+        print(f"导入成功: {result['paper'].title}")
+else:
+    print(f"导入失败: {result['error']}")
 ```
 
 ---

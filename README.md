@@ -7,6 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.31-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-1.4.0-brightgreen.svg)](docs/CHANGELOG.md)
 
 [English](#english) | [中文](#中文)
 
@@ -26,14 +27,17 @@
 - PDF 上传与自动解析
 - 元数据提取（标题、作者、日期）
 - 关键图片提取与分类（架构图/性能图/算法图）
+- 图片上传与标注管理
+- 内容编辑与笔记管理
 
 </td>
 <td width="50%">
 
 #### 🧠 AI 深度分析
 - **8 维度结构化总结**：问题定义、相关工作、方法论、实验结果等
-- **自动思维导图**：Mermaid.js 可视化
+- **自动思维导图**：Mermaid.js 可视化，高对比度配色
 - **三维度智能标签**：领域 / 方法 / 任务
+- **层级标签体系**：支持父子标签关系
 
 </td>
 </tr>
@@ -41,21 +45,23 @@
 <td width="50%">
 
 #### 💬 RAG 对话问答
-- 基于向量检索的智能问答
+- 基于 ChromaDB 的向量检索
 - `@mention` 语法指定论文
 - 多论文对比分析
-- 来源追溯
+- 来源追溯与引用
 
 </td>
 <td width="50%">
 
 #### 🤖 Auto-Scholar 论文监控
-- Arxiv 每日自动抓取
-- **三层智能筛选**：关键词 + 元数据评分 + AI 深度评分
-- **自动识别顶刊顶会**：ICLR, NeurIPS, CVPR 等 40+ 顶会
-- **自动识别知名机构**：MIT, Stanford, 清华, 浙大等 100+ 机构
-- S/A/B 分级推荐 + 中文翻译
-- 📍 会议徽章 + 🏛️ 机构徽章展示
+- **智能抓取**：Arxiv 自动抓取 + 关键词配置
+- **多层筛选**：关键词 → 元数据评分 → PDF 提取 → AI 深度评分
+- **顶会识别**：自动识别 ICLR, NeurIPS, CVPR 等 40+ 顶会顶刊
+- **机构识别**：自动识别 MIT, Stanford, 清华, 浙大等 100+ 知名机构
+- **PDF 元数据提取**：直接从 PDF 提取会议和机构信息（零存储）
+- **分级推荐**：S/A/B 级评分 + 中文翻译
+- **徽章展示**：📍 会议徽章 + 🏛️ 机构徽章
+- **数据分析**：论文质量统计、发表趋势、关键词热力图
 
 </td>
 </tr>
@@ -94,8 +100,9 @@ streamlit run app.py
 #### 论文上传
 1. 点击侧边栏「📤 上传论文」
 2. 拖拽或选择 PDF 文件
-3. 点击「开始处理」，等待 AI 分析完成（约 2-3 分钟）
+3. 点击「开始处理」，等待 AI 分析完成
 4. 查看结构化笔记、思维导图和自动标签
+5. 支持上传自定义图片并添加标注
 
 #### 对话问答
 - **全局问答**：直接输入问题，检索所有论文
@@ -104,9 +111,12 @@ streamlit run app.py
 
 #### Auto-Scholar 配置
 1. 点击侧边栏「🤖 Auto-Scholar」
-2. 在「关键词设置」中配置研究兴趣关键词
-3. 点击「立即抓取」获取最新论文
-4. 查看 S/A/B 分级推荐，导出 HTML 日报
+2. 在「⚙️ 关键词设置」中配置研究兴趣关键词（核心/前沿）
+3. 在「📊 论文列表」中选择抓取模式（昨天到目前/自定义时间段）
+4. 点击「🚀 立即抓取」获取最新论文
+5. 查看 S/A/B 分级推荐，支持收藏和导入
+6. 在「📈 统计分析」中查看论文质量分析（分数/顶会/机构/交叉分析）
+7. 在「📊 发表趋势」中查看实时趋势分析（时间趋势/关键词分析/热力图）
 
 详细使用说明请参考 [Auto-Scholar 使用指南](docs/AUTO_SCHOLAR_GUIDE.md)
 
@@ -119,16 +129,17 @@ streamlit run app.py
 ### 🏗️ 系统架构
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    用户界面 (Streamlit)                   │
-│   Dashboard │ Upload │ Detail │ Chat │ Tags │ Scholar   │
-├─────────────────────────────────────────────────────────┤
-│                      服务层                               │
-│  PDF解析 │ LLM总结 │ 思维导图 │ 标签 │ RAG │ 评分引擎    │
-├─────────────────────────────────────────────────────────┤
-│                      数据层                               │
-│         SQLite (关系数据)  │  ChromaDB (向量检索)         │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    用户界面 (Streamlit)                          │
+│   Dashboard │ Upload │ Detail │ Chat │ Tags │ Auto-Scholar     │
+├─────────────────────────────────────────────────────────────────┤
+│                      服务层                                      │
+│  PDF解析 │ LLM总结 │ 思维导图 │ 标签 │ RAG │ 评分引擎           │
+│  元数据提取 │ Arxiv爬虫 │ 质量分析 │ 趋势分析                   │
+├─────────────────────────────────────────────────────────────────┤
+│                      数据层                                      │
+│         SQLite (关系数据)  │  ChromaDB (向量检索)                │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### 🛠️ 技术栈
@@ -136,19 +147,22 @@ streamlit run app.py
 | 类别 | 技术 | 说明 |
 |-----|-----|-----|
 | 前端框架 | Streamlit | 快速构建数据应用 |
-| LLM | Gemini / 豆包 | 论文分析与评分 |
+| LLM | Gemini / 豆包 | 论文分析、评分与翻译 |
 | 关系数据库 | SQLite + SQLAlchemy | 论文元数据存储 |
 | 向量数据库 | ChromaDB | RAG 语义检索 |
 | PDF 解析 | PyMuPDF | 文本与图片提取 |
-| 可视化 | Mermaid.js | 思维导图渲染 |
+| 可视化 | Mermaid.js + Plotly | 思维导图与数据图表 |
+| 学术 API | Arxiv API | 论文抓取与元数据 |
 
 ### 📋 路线图
 
 - [x] 核心功能：PDF 解析、结构化总结、思维导图、智能标签
 - [x] RAG 对话问答（@mention 语法）
-- [x] Auto-Scholar 论文监控
+- [x] Auto-Scholar 论文监控（多层筛选、顶会机构识别）
+- [x] PDF 元数据提取（会议、机构信息）
 - [x] 标签管理增强（层级、合并、重复检测）
 - [x] 内容编辑（笔记编辑、图片管理）
+- [x] 数据分析与可视化（质量统计、发表趋势、热力图）
 - [ ] 批量上传
 - [ ] 导出功能（Markdown/PDF）
 - [ ] 引用关系图谱
@@ -158,20 +172,43 @@ streamlit run app.py
 
 ```
 paperbrain/
-├── app.py                 # 应用入口
-├── config.py              # 配置管理
-├── database/              # 数据库层
-│   ├── models.py          # 数据模型
-│   └── db_manager.py      # CRUD 操作
-├── services/              # 服务层
-│   ├── llm_service.py     # LLM API
-│   ├── pdf_parser.py      # PDF 解析
-│   ├── summarizer.py      # 总结生成
-│   ├── rag_service.py     # RAG 服务
-│   ├── arxiv_crawler.py   # Arxiv 爬虫
-│   └── scoring_engine.py  # 评分引擎
-├── ui/                    # UI 组件
-└── utils/                 # 工具函数
+├── app.py                          # 应用入口
+├── config.py                       # 配置管理
+├── config/                         # 配置模块
+│   ├── venues.py                   # 顶会顶刊配置
+│   └── institutions.py             # 知名机构配置
+├── database/                       # 数据库层
+│   ├── models.py                   # 数据模型
+│   ├── db_manager.py               # CRUD 操作
+│   └── init_db.py                  # 数据库初始化
+├── services/                       # 服务层
+│   ├── llm_service.py              # LLM API
+│   ├── pdf_parser.py               # PDF 解析
+│   ├── pdf_metadata_extractor.py   # PDF 元数据提取
+│   ├── summarizer.py               # 总结生成
+│   ├── mindmap_generator.py        # 思维导图生成
+│   ├── tagger.py                   # 智能标签
+│   ├── rag_service.py              # RAG 服务
+│   ├── arxiv_crawler.py            # Arxiv 爬虫
+│   ├── scoring_engine.py           # 评分引擎
+│   ├── metadata_scorer.py          # 元数据评分
+│   ├── quality_analyzer.py         # 质量分析
+│   └── trend_analyzer.py           # 趋势分析
+├── ui/                             # UI 组件
+│   ├── dashboard.py                # 论文列表
+│   ├── upload_page.py              # 上传页面
+│   ├── paper_detail.py             # 论文详情
+│   ├── chat_interface.py           # 对话界面
+│   ├── tag_management.py           # 标签管理
+│   └── auto_scholar.py             # Auto-Scholar
+├── utils/                          # 工具函数
+│   ├── prompts.py                  # Prompt 模板
+│   └── helpers.py                  # 辅助函数
+└── docs/                           # 文档
+    ├── CHANGELOG.md                # 更新日志
+    ├── TECHNICAL_DOCUMENTATION.md  # 技术文档
+    ├── AUTO_SCHOLAR_GUIDE.md       # Auto-Scholar 指南
+    └── FEATURE_VENUE_INSTITUTION.md # 顶会机构功能说明
 ```
 
 详细架构请参考 [技术文档](docs/TECHNICAL_DOCUMENTATION.md)
@@ -199,6 +236,19 @@ pip install streamlit-mermaid
 参考 [Auto-Scholar 使用指南](docs/AUTO_SCHOLAR_GUIDE.md) 中的定时任务配置部分。
 </details>
 
+<details>
+<summary>PDF 元数据提取失败？</summary>
+
+系统会自动重试。如果论文较大（>500KB），会自动下载完整文件进行解析。
+</details>
+
+### 📚 文档
+
+- [更新日志 (CHANGELOG)](docs/CHANGELOG.md) - 版本历史与功能更新
+- [技术文档 (TECHNICAL_DOCUMENTATION)](docs/TECHNICAL_DOCUMENTATION.md) - 详细架构与 API
+- [Auto-Scholar 使用指南](docs/AUTO_SCHOLAR_GUIDE.md) - 论文监控功能说明
+- [顶会机构功能说明](docs/FEATURE_VENUE_INSTITUTION.md) - 会议与机构识别
+
 ---
 
 ## English
@@ -213,14 +263,17 @@ pip install streamlit-mermaid
 - PDF upload & auto-parsing
 - Metadata extraction (title, authors, date)
 - Key image extraction & classification
+- Image upload & annotation
+- Content editing & note management
 
 </td>
 <td width="50%">
 
 #### 🧠 AI Deep Analysis
 - **8-dimension structured summary**: problem, related work, methodology, results, etc.
-- **Auto mind map**: Mermaid.js visualization
+- **Auto mind map**: Mermaid.js visualization with high contrast colors
 - **3-dimension smart tags**: Domain / Method / Task
+- **Hierarchical tag system**: Parent-child relationships
 
 </td>
 </tr>
@@ -228,19 +281,23 @@ pip install streamlit-mermaid
 <td width="50%">
 
 #### 💬 RAG Q&A
-- Vector-based semantic search
+- ChromaDB-based vector search
 - `@mention` syntax for specific papers
 - Multi-paper comparison
-- Source attribution
+- Source attribution & citation
 
 </td>
 <td width="50%">
 
 #### 🤖 Auto-Scholar Monitoring
-- Daily Arxiv auto-fetch
-- 3-layer filtering (keywords + citations + AI scoring)
-- S/A/B tier recommendations + Chinese translation
-- Auto HTML report generation
+- **Smart crawling**: Arxiv auto-fetch + keyword configuration
+- **Multi-layer filtering**: Keywords → Metadata scoring → PDF extraction → AI deep scoring
+- **Conference recognition**: Auto-identify 40+ top conferences (ICLR, NeurIPS, CVPR, etc.)
+- **Institution recognition**: Auto-identify 100+ prestigious institutions (MIT, Stanford, Tsinghua, etc.)
+- **PDF metadata extraction**: Extract conference & institution info directly from PDF (zero storage)
+- **Tier recommendations**: S/A/B scoring + Chinese translation
+- **Badge display**: 📍 Conference badges + 🏛️ Institution badges
+- **Data analytics**: Quality statistics, publication trends, keyword heatmaps
 
 </td>
 </tr>
@@ -258,7 +315,7 @@ pip install -r requirements.txt
 # 3. Configure
 cp .env.example .env  # Edit .env with your API credentials
 
-# 4. Run
+# 4. Initialize & Run
 python database/init_db.py && streamlit run app.py
 ```
 
@@ -269,8 +326,9 @@ Visit http://localhost:8501 🎉
 #### Upload Papers
 1. Click "📤 Upload Paper" in sidebar
 2. Drag & drop or select PDF file
-3. Click "Start Processing" and wait for AI analysis (~2-3 min)
+3. Click "Start Processing" and wait for AI analysis
 4. View structured notes, mind map, and auto-generated tags
+5. Upload custom images with annotations
 
 #### Q&A Chat
 - **Global search**: Ask questions across all papers
@@ -279,28 +337,36 @@ Visit http://localhost:8501 🎉
 
 #### Auto-Scholar
 1. Click "🤖 Auto-Scholar" in sidebar
-2. Configure keywords in "Keyword Settings"
-3. Click "Fetch Now" to get latest papers
-4. View S/A/B tier recommendations, export HTML report
+2. Configure keywords in "⚙️ Keyword Settings" (Core/Frontier)
+3. Select fetch mode in "📊 Paper List" (Yesterday to Now / Custom Date Range)
+4. Click "🚀 Fetch Now" to get latest papers
+5. View S/A/B tier recommendations, support favorites and import
+6. Check "📈 Statistics" for quality analysis (Score/Conference/Institution/Cross Analysis)
+7. Check "📊 Trends" for real-time trend analysis (Time Trends/Keyword Analysis/Heatmap)
+
+See [Auto-Scholar Guide](docs/AUTO_SCHOLAR_GUIDE.md) for details.
 
 ### 🛠️ Tech Stack
 
 | Category | Technology | Purpose |
 |----------|------------|---------|
 | Frontend | Streamlit | Rapid data app development |
-| LLM | Gemini / Doubao | Paper analysis & scoring |
+| LLM | Gemini / Doubao | Paper analysis, scoring & translation |
 | Database | SQLite + SQLAlchemy | Relational data storage |
 | Vector DB | ChromaDB | RAG semantic search |
 | PDF Parser | PyMuPDF | Text & image extraction |
-| Visualization | Mermaid.js | Mind map rendering |
+| Visualization | Mermaid.js + Plotly | Mind maps & data charts |
+| Academic API | Arxiv API | Paper crawling & metadata |
 
 ### 📋 Roadmap
 
 - [x] Core features: PDF parsing, structured summary, mind map, smart tags
 - [x] RAG Q&A with @mention syntax
-- [x] Auto-Scholar paper monitoring
+- [x] Auto-Scholar paper monitoring (multi-layer filtering, conference & institution recognition)
+- [x] PDF metadata extraction (conference & institution info)
 - [x] Enhanced tag management (hierarchy, merge, duplicate detection)
 - [x] Content editing (notes, images)
+- [x] Data analytics & visualization (quality statistics, publication trends, heatmaps)
 - [ ] Batch upload
 - [ ] Export (Markdown/PDF)
 - [ ] Citation graph
@@ -308,7 +374,10 @@ Visit http://localhost:8501 🎉
 
 ### 📖 Documentation
 
-See [Technical Documentation](docs/TECHNICAL_DOCUMENTATION.md) for detailed architecture and API reference.
+- [CHANGELOG](docs/CHANGELOG.md) - Version history & feature updates
+- [Technical Documentation](docs/TECHNICAL_DOCUMENTATION.md) - Detailed architecture & API
+- [Auto-Scholar Guide](docs/AUTO_SCHOLAR_GUIDE.md) - Paper monitoring features
+- [Conference & Institution Feature](docs/FEATURE_VENUE_INSTITUTION.md) - Recognition system
 
 ---
 

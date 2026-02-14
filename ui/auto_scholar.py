@@ -6,17 +6,25 @@ import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
+from typing import List, Dict
 from database.db_manager import db_manager
 from services.scheduler import daily_scheduler
 from services.progress_tracker import ProgressTracker, create_progress_callback, STAGE_NAMES, PipelineStage
+from services.paper_importer import paper_importer
 
 
 def show_auto_scholar():
     """显示 Auto-Scholar 页面"""
     st.title("🤖 Auto-Scholar 论文智能监控")
 
-    # 创建 Tabs（新增收藏列表）
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 论文列表", "⭐ 收藏列表", "⚙️ 关键词设置", "📈 统计分析"])
+    # 创建 Tabs（新增发表趋势）
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📊 论文列表",
+        "⭐ 收藏列表",
+        "⚙️ 关键词设置",
+        "📈 统计分析",
+        "📊 发表趋势"
+    ])
 
     with tab1:
         show_papers_list()
@@ -29,6 +37,9 @@ def show_auto_scholar():
 
     with tab4:
         show_statistics()
+
+    with tab5:
+        show_trend_analysis()
 
 
 def show_papers_list():
@@ -507,7 +518,44 @@ def render_favorite_card(fav):
 
         with col2:
             if st.button("📥 导入论文库", key=f"fav_import_{fav.id}"):
-                st.info("导入功能开发中...")
+                # 查找对应的 ArxivPaper
+                arxiv_paper = db_manager.get_arxiv_paper_by_arxiv_id(fav.arxiv_id)
+
+                if not arxiv_paper:
+                    st.error(f"未找到对应的 Arxiv 论文记录 (arxiv_id: {fav.arxiv_id})")
+                elif arxiv_paper.is_imported:
+                    st.info("该论文已导入到论文库")
+                else:
+                    # 创建进度显示
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+
+                    # 定义进度回调函数
+                    def update_progress(progress: int, message: str):
+                        progress_bar.progress(progress / 100)
+                        status_text.text(message)
+
+                    # 执行导入
+                    result = paper_importer.import_arxiv_paper(
+                        arxiv_paper_id=arxiv_paper.id,
+                        progress_callback=update_progress
+                    )
+
+                    # 显示结果
+                    if result['success']:
+                        if result.get('is_duplicate'):
+                            st.info(result['message'])
+                        else:
+                            st.success(f"✅ {result['message']}")
+                            st.balloons()
+
+                        # 提供查看详情按钮
+                        if st.button("📖 查看论文详情", key=f"view_imported_{fav.id}"):
+                            st.session_state.current_page = 'paper_detail'
+                            st.session_state.selected_paper_id = result['paper'].id
+                            st.rerun()
+                    else:
+                        st.error(f"❌ {result.get('error', '导入失败')}")
 
         with col3:
             if st.button("❌ 取消收藏", key=f"unfav_{fav.id}"):
@@ -626,24 +674,45 @@ def show_keyword_config():
 
 
 def show_statistics():
-    """显示统计分析"""
-    st.markdown("### 📈 统计分析")
+    """显示统计分析（基于已评分论文）"""
+    st.markdown("### 📈 统计分析（基于已评分论文）")
 
-    # 获取最近7天的数据
+    # 获取所有已评分论文
     papers = db_manager.get_all_arxiv_papers(limit=500)
 
     if not papers:
-        st.info("还没有数据")
+        st.info("暂无已评分论文数据")
         return
 
+    # 创建子Tab
+    subtab1, subtab2, subtab3, subtab4 = st.tabs([
+        "📊 分数分析",
+        "🏆 顶会顶刊",
+        "🏛️ 知名机构",
+        "🔬 交叉分析"
+    ])
+
+    with subtab1:
+        show_score_analysis(papers)
+
+    with subtab2:
+        show_venue_analysis(papers)
+
+    with subtab3:
+        show_institution_analysis(papers)
+
+    with subtab4:
+        show_cross_analysis(papers)
+
+
+def show_score_analysis(papers: List):
+    """显示分数分析"""
+    from services.quality_analyzer import quality_analyzer
+
+    st.markdown("#### 📊 分数分析")
+
     # 分数分布
-    st.markdown("#### 📊 分数分布")
-    score_ranges = {
-        "S级 (9-10分)": len([p for p in papers if p.score >= 9]),
-        "A级 (7-8分)": len([p for p in papers if 7 <= p.score < 9]),
-        "B级 (5-6分)": len([p for p in papers if 5 <= p.score < 7]),
-        "C级 (<5分)": len([p for p in papers if p.score < 5])
-    }
+    score_ranges = quality_analyzer.get_score_distribution(papers)
 
     col1, col2 = st.columns([1, 1])
 
@@ -668,9 +737,13 @@ def show_statistics():
         fig_bar.update_layout(title="论文数量统计", height=400, yaxis_title="数量")
         st.plotly_chart(fig_bar, use_container_width=True)
 
-    # 平均分
-    avg_score = sum(p.score for p in papers) / len(papers) if papers else 0
-    st.metric("平均分", f"{avg_score:.2f}")
+    # 统计指标
+    stats = quality_analyzer.get_score_statistics(papers)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("平均分", f"{stats['avg']:.2f}")
+    col2.metric("中位数", f"{stats['median']:.2f}")
+    col3.metric("最高分", f"{stats['max']:.2f}")
+    col4.metric("最低分", f"{stats['min']:.2f}")
 
     # 分数分布直方图
     st.markdown("#### 📈 分数详细分布")
@@ -693,3 +766,453 @@ def show_statistics():
     top_papers = sorted(papers, key=lambda p: p.score, reverse=True)[:5]
     for i, paper in enumerate(top_papers, 1):
         st.write(f"{i}. **[{paper.score:.1f}分]** {paper.title_zh or paper.title}")
+
+
+def show_venue_analysis(papers: List):
+    """显示顶会顶刊分析"""
+    from services.quality_analyzer import quality_analyzer
+
+    st.markdown("#### 🏆 顶会顶刊分析")
+
+    # 获取顶会顶刊分布
+    venue_dist = quality_analyzer.get_venue_distribution(papers, min_score=0.0, top_n=20)
+
+    if not venue_dist:
+        st.info("暂无会议/期刊数据")
+        return
+
+    # 横向柱状图
+    fig = go.Figure(data=[go.Bar(
+        y=[v['venue'] for v in venue_dist],
+        x=[v['count'] for v in venue_dist],
+        orientation='h',
+        marker=dict(color='#9b59b6'),
+        text=[f"{v['count']}篇 (均分:{v['avg_score']:.1f})" for v in venue_dist],
+        textposition='auto'
+    )])
+    fig.update_layout(
+        title="顶会顶刊论文数量排行",
+        xaxis_title="论文数量",
+        yaxis_title="会议/期刊",
+        height=max(400, len(venue_dist) * 25),
+        yaxis={'categoryorder': 'total ascending'}
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 显示详细数据
+    with st.expander("📋 详细数据", expanded=False):
+        for i, v in enumerate(venue_dist, 1):
+            st.write(f"{i}. **{v['venue']}**: {v['count']}篇论文，平均分 {v['avg_score']:.2f}")
+
+
+def show_institution_analysis(papers: List):
+    """显示知名机构分析"""
+    from services.quality_analyzer import quality_analyzer
+
+    st.markdown("#### 🏛️ 知名机构分析")
+
+    # 获取知名机构分布
+    inst_dist = quality_analyzer.get_institution_distribution(papers, min_score=0.0, top_n=20)
+
+    if not inst_dist:
+        st.info("暂无机构数据")
+        return
+
+    # 横向柱状图
+    fig = go.Figure(data=[go.Bar(
+        y=[i['institution'] for i in inst_dist],
+        x=[i['count'] for i in inst_dist],
+        orientation='h',
+        marker=dict(color='#16a085'),
+        text=[f"{i['count']}篇 (均分:{i['avg_score']:.1f})" for i in inst_dist],
+        textposition='auto'
+    )])
+    fig.update_layout(
+        title="知名机构论文数量排行",
+        xaxis_title="论文数量",
+        yaxis_title="机构",
+        height=max(400, len(inst_dist) * 25),
+        yaxis={'categoryorder': 'total ascending'}
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 显示详细数据
+    with st.expander("📋 详细数据", expanded=False):
+        for i, inst in enumerate(inst_dist, 1):
+            st.write(f"{i}. **{inst['institution']}**: {inst['count']}篇论文，平均分 {inst['avg_score']:.2f}")
+
+
+def show_trend_analysis():
+    """显示发表趋势分析（轻量级，从Arxiv API抓取）"""
+    st.markdown("### 📊 发表趋势分析（轻量级）")
+
+    st.info("💡 此功能从Arxiv API实时抓取数据，不依赖评分系统，可查看完整的论文发表趋势")
+
+    # 时间范围选择器
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input(
+            "开始日期",
+            value=datetime.now() - timedelta(days=7),
+            max_value=datetime.now()
+        )
+    with col2:
+        end_date = st.date_input(
+            "结束日期",
+            value=datetime.now(),
+            max_value=datetime.now()
+        )
+
+    # 限制查询范围（避免API超时）
+    max_days = 90  # 放宽到90天
+    if (end_date - start_date).days > max_days:
+        st.warning(f"⚠️ 查询范围不能超过{max_days}天，已自动调整")
+        start_date = end_date - timedelta(days=max_days)
+
+    # 获取关键词配置
+    keywords_config = db_manager.get_all_keywords()
+    if not keywords_config:
+        st.warning("⚠️ 请先在「关键词设置」中配置关键词")
+        return
+
+    # 抓取按钮
+    if st.button("🔍 开始分析", type="primary"):
+        with st.spinner("正在从Arxiv API抓取数据..."):
+            # 创建趋势分析器
+            from services.trend_analyzer import trend_analyzer
+
+            # 抓取数据
+            keywords = [kw.keyword for kw in keywords_config]
+            start_dt = datetime.combine(start_date, datetime.min.time())
+            end_dt = datetime.combine(end_date, datetime.max.time())
+
+            papers = trend_analyzer.fetch_papers_by_date_range(
+                start_dt, end_dt, keywords
+            )
+
+            if not papers:
+                st.info("未找到相关论文")
+                return
+
+            # 缓存数据到session state
+            st.session_state.trend_papers = papers
+            st.session_state.trend_keywords = keywords
+            st.session_state.trend_keywords_config = keywords_config
+
+            # 立即初始化关键词选择状态（避免第一次选择时跳转）
+            if "trend_keyword_comparison" not in st.session_state:
+                st.session_state.trend_keyword_comparison = keywords[:min(3, len(keywords))]
+
+    # 显示分析结果
+    if 'trend_papers' in st.session_state:
+        papers = st.session_state.trend_papers
+        keywords = st.session_state.trend_keywords
+        keywords_config = st.session_state.trend_keywords_config
+
+        # 确保关键词选择状态已初始化（防御性编程）
+        if "trend_keyword_comparison" not in st.session_state:
+            st.session_state.trend_keyword_comparison = keywords[:min(3, len(keywords))]
+
+        st.success(f"✅ 共抓取 {len(papers)} 篇论文")
+
+        # 子Tab
+        subtab1, subtab2, subtab3 = st.tabs([
+            "📅 时间趋势",
+            "🔍 关键词分析",
+            "🔥 热力图"
+        ])
+
+        with subtab1:
+            show_time_trend(papers)
+
+        with subtab2:
+            show_keyword_distribution(papers, keywords, keywords_config)
+
+        with subtab3:
+            show_keyword_heatmap(papers, keywords)
+
+
+def show_time_trend(papers: List[Dict]):
+    """显示时间趋势分析"""
+    from services.trend_analyzer import trend_analyzer
+
+    st.markdown("#### 📅 时间趋势分析")
+
+    # 每日论文数量趋势
+    daily_data = trend_analyzer.get_daily_paper_count(papers)
+
+    if not daily_data:
+        st.info("暂无数据")
+        return
+
+    # 折线图
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=[d['date'] for d in daily_data],
+        y=[d['count'] for d in daily_data],
+        mode='lines+markers',
+        name='论文数量',
+        line=dict(color='#3498db', width=2),
+        marker=dict(size=8)
+    ))
+    fig.update_layout(
+        title="每日新增论文数量趋势",
+        xaxis_title="日期",
+        yaxis_title="论文数量",
+        height=400,
+        hovermode='x unified'
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 统计信息
+    col1, col2, col3 = st.columns(3)
+    total_papers = len(papers)
+    avg_daily = total_papers / len(daily_data) if daily_data else 0
+    max_daily = max([d['count'] for d in daily_data]) if daily_data else 0
+
+    col1.metric("总论文数", total_papers)
+    col2.metric("日均论文数", f"{avg_daily:.1f}")
+    col3.metric("单日最高", max_daily)
+
+
+def show_keyword_distribution(papers: List[Dict], keywords: List[str], keywords_config: List):
+    """显示关键词分析"""
+    from services.trend_analyzer import trend_analyzer
+
+    st.markdown("#### 🔍 关键词分析")
+
+    # 关键词论文数量分布
+    keyword_dist = trend_analyzer.get_keyword_distribution(papers, keywords)
+
+    if not keyword_dist:
+        st.info("暂无数据")
+        return
+
+    # 柱状图
+    fig_bar = go.Figure(data=[go.Bar(
+        x=[d['keyword'] for d in keyword_dist],
+        y=[d['count'] for d in keyword_dist],
+        marker=dict(color='#3498db')
+    )])
+    fig_bar.update_layout(
+        title="关键词论文数量分布",
+        xaxis_title="关键词",
+        yaxis_title="论文数量",
+        height=400,
+        xaxis_tickangle=-45
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+    # 关键词类别占比
+    category_ratio = trend_analyzer.get_keyword_category_ratio(papers, keywords_config)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # 饼图
+        fig_pie = go.Figure(data=[go.Pie(
+            labels=['核心关键词 (Core)', '前沿关键词 (Frontier)'],
+            values=[category_ratio['core'], category_ratio['frontier']],
+            hole=0.3,
+            marker=dict(colors=['#3498db', '#e74c3c'])
+        )])
+        fig_pie.update_layout(title="关键词类别占比", height=350)
+        st.plotly_chart(fig_pie, use_container_width=True)
+
+    with col2:
+        # 显示统计数据
+        st.markdown("**统计数据**")
+        st.metric("核心关键词论文", category_ratio['core'])
+        st.metric("前沿关键词论文", category_ratio['frontier'])
+
+    # 多关键词趋势对比（P2阶段新增）
+    st.markdown("---")
+    st.markdown("#### 📈 关键词时间趋势对比")
+
+    # 注意：初始化已在数据抓取完成时完成，这里不需要再初始化
+    # 选择要对比的关键词（最多5个）
+    selected_keywords = st.multiselect(
+        "选择要对比的关键词（最多5个）",
+        options=keywords,
+        max_selections=5,
+        key="trend_keyword_comparison"
+    )
+
+    if selected_keywords:
+        # 创建多条折线图
+        fig_trends = go.Figure()
+
+        colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6']
+
+        for i, keyword in enumerate(selected_keywords):
+            trend_data = trend_analyzer.get_keyword_trend(papers, keyword)
+            if trend_data:
+                fig_trends.add_trace(go.Scatter(
+                    x=[d['date'] for d in trend_data],
+                    y=[d['count'] for d in trend_data],
+                    mode='lines+markers',
+                    name=keyword,
+                    line=dict(color=colors[i % len(colors)], width=2),
+                    marker=dict(size=6)
+                ))
+
+        fig_trends.update_layout(
+            title="关键词时间趋势对比",
+            xaxis_title="日期",
+            yaxis_title="论文数量",
+            height=400,
+            hovermode='x unified',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig_trends, use_container_width=True)
+    else:
+        st.info("请选择至少一个关键词进行趋势分析")
+
+
+def show_keyword_heatmap(papers: List[Dict], keywords: List[str]):
+    """显示关键词×时间热力图"""
+    from services.trend_analyzer import trend_analyzer
+
+    st.markdown("#### 🔥 关键词×时间热力图")
+
+    # 限制关键词数量（避免热力图过大）
+    max_keywords = 20
+    if len(keywords) > max_keywords:
+        st.info(f"关键词数量过多，仅显示前 {max_keywords} 个")
+        keywords = keywords[:max_keywords]
+
+    # 获取热力图数据
+    heatmap_data = trend_analyzer.get_keyword_time_heatmap(papers, keywords)
+
+    if not heatmap_data['dates']:
+        st.info("暂无数据")
+        return
+
+    # 创建热力图
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_data['matrix'],
+        x=[d.strftime('%Y-%m-%d') for d in heatmap_data['dates']],
+        y=heatmap_data['keywords'],
+        colorscale='Blues',
+        hoverongaps=False
+    ))
+    fig.update_layout(
+        title="关键词×时间热力图",
+        xaxis_title="日期",
+        yaxis_title="关键词",
+        height=max(400, len(keywords) * 25),
+        xaxis_tickangle=-45
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def show_cross_analysis(papers: List):
+    """显示交叉分析（P2阶段）"""
+    from services.quality_analyzer import quality_analyzer
+
+    st.markdown("#### 🔬 交叉分析")
+
+    # 选择分析类型
+    analysis_type = st.selectbox(
+        "选择分析类型",
+        ["会议×分数", "机构×分数"]
+    )
+
+    if analysis_type == "会议×分数":
+        show_venue_score_matrix(papers)
+    else:
+        show_institution_score_matrix(papers)
+
+
+def show_venue_score_matrix(papers: List):
+    """显示会议×分数交叉分析"""
+    from services.quality_analyzer import quality_analyzer
+
+    st.markdown("##### 🏆 会议×分数交叉分析")
+
+    # 获取交叉分析数据
+    matrix_data = quality_analyzer.get_venue_score_matrix(papers, top_venues=10)
+
+    if not matrix_data['venues']:
+        st.info("暂无会议数据")
+        return
+
+    # 创建分组柱状图
+    fig = go.Figure()
+
+    colors = ['#e74c3c', '#3498db', '#95a5a6', '#bdc3c7']
+
+    for i, level in enumerate(matrix_data['score_levels']):
+        fig.add_trace(go.Bar(
+            name=level,
+            y=matrix_data['venues'],
+            x=[matrix_data['matrix'][j][i] for j in range(len(matrix_data['venues']))],
+            orientation='h',
+            marker=dict(color=colors[i])
+        ))
+
+    fig.update_layout(
+        title="会议×分数交叉分析",
+        xaxis_title="论文数量",
+        yaxis_title="会议/期刊",
+        barmode='stack',
+        height=max(400, len(matrix_data['venues']) * 30),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 显示详细数据
+    with st.expander("📋 详细数据", expanded=False):
+        for i, venue in enumerate(matrix_data['venues']):
+            st.write(f"**{venue}**:")
+            for j, level in enumerate(matrix_data['score_levels']):
+                count = matrix_data['matrix'][i][j]
+                if count > 0:
+                    st.write(f"  - {level}: {count}篇")
+
+
+def show_institution_score_matrix(papers: List):
+    """显示机构×分数交叉分析"""
+    from services.quality_analyzer import quality_analyzer
+
+    st.markdown("##### 🏛️ 机构×分数交叉分析")
+
+    # 获取交叉分析数据
+    matrix_data = quality_analyzer.get_institution_score_matrix(papers, top_institutions=10)
+
+    if not matrix_data['institutions']:
+        st.info("暂无机构数据")
+        return
+
+    # 创建分组柱状图
+    fig = go.Figure()
+
+    colors = ['#e74c3c', '#3498db', '#95a5a6', '#bdc3c7']
+
+    for i, level in enumerate(matrix_data['score_levels']):
+        fig.add_trace(go.Bar(
+            name=level,
+            y=matrix_data['institutions'],
+            x=[matrix_data['matrix'][j][i] for j in range(len(matrix_data['institutions']))],
+            orientation='h',
+            marker=dict(color=colors[i])
+        ))
+
+    fig.update_layout(
+        title="机构×分数交叉分析",
+        xaxis_title="论文数量",
+        yaxis_title="机构",
+        barmode='stack',
+        height=max(400, len(matrix_data['institutions']) * 30),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 显示详细数据
+    with st.expander("📋 详细数据", expanded=False):
+        for i, inst in enumerate(matrix_data['institutions']):
+            st.write(f"**{inst}**:")
+            for j, level in enumerate(matrix_data['score_levels']):
+                count = matrix_data['matrix'][i][j]
+                if count > 0:
+                    st.write(f"  - {level}: {count}篇")

@@ -5,6 +5,7 @@
 from services.pdf_parser import pdf_parser
 from database.db_manager import db_manager
 import re
+import os
 from typing import List
 
 
@@ -32,22 +33,22 @@ class ImageExtractor:
         Returns:
             关键图片信息列表
         """
-        # 提取所有图片到磁盘
+        # 提取所有图片到磁盘（已经过滤了太小的图片和异常宽高比）
         all_images = pdf_parser.extract_images_to_disk(pdf_path, paper_id)
 
-        # 筛选关键图片
+        # 所有通过尺寸过滤的图片都保存到数据库
+        # 不再依赖 caption 过滤，因为 caption 匹配不准确
         key_images = []
         for img in all_images:
-            if self._is_key_image(img['caption']):
-                # 保存到数据库
-                db_manager.add_image_to_paper(
-                    paper_id=paper_id,
-                    image_path=img['path'],
-                    caption=img['caption'],
-                    page_number=img['page'],
-                    image_type=self._classify_image_type(img['caption'])
-                )
-                key_images.append(img)
+            # 保存到数据库
+            db_manager.add_image_to_paper(
+                paper_id=paper_id,
+                image_path=img['path'],
+                caption=img.get('caption', ''),
+                page_number=img['page'],
+                image_type=self._classify_image_type(img.get('caption', ''))
+            )
+            key_images.append(img)
 
         return key_images
 
