@@ -154,19 +154,42 @@ streamlit run app.py
 | 可视化 | Mermaid.js + Plotly | 思维导图与数据图表 |
 | 学术 API | Arxiv API | 论文抓取与元数据 |
 
-### 📋 路线图
+### 📋 功能路线图
 
-- [x] 核心功能：PDF 解析、结构化总结、思维导图、智能标签
-- [x] RAG 对话问答（@mention 语法）
-- [x] Auto-Scholar 论文监控（多层筛选、顶会机构识别）
-- [x] PDF 元数据提取（会议、机构信息）
-- [x] 标签管理增强（层级、合并、重复检测）
-- [x] 内容编辑（笔记编辑、图片管理）
-- [x] 数据分析与可视化（质量统计、发表趋势、热力图）
-- [ ] 批量上传
-- [ ] 导出功能（Markdown/PDF）
-- [ ] 引用关系图谱
-- [ ] 多语言论文支持
+#### ✅ 已完成功能
+
+**论文管理与分析**
+- [x] PDF 智能解析（文本、图片、元数据提取）
+- [x] 8 维度结构化总结（问题、方法、结果、未来工作等）
+- [x] 自动思维导图生成（Mermaid.js 可视化）
+- [x] 三维度智能标签系统（领域/方法/任务）
+- [x] 层级标签管理（父子关系、合并、去重）
+- [x] 内容编辑（笔记编辑、图片上传与标注）
+
+**智能问答与检索**
+- [x] RAG 向量检索问答（基于 ChromaDB）
+- [x] @mention 语法（指定论文提问）
+- [x] 多论文对比分析
+- [x] 来源追溯与引用
+
+**Auto-Scholar 论文监控**
+- [x] Arxiv 自动抓取与关键词筛选
+- [x] 四层智能筛选（关键词 → 元数据评分 → PDF 提取 → AI 深度评分）
+- [x] 顶会顶刊自动识别（40+ 顶会，包括 ICLR、NeurIPS、CVPR 等）
+- [x] 知名机构自动识别（100+ 机构，包括 MIT、Stanford、清华、浙大等）
+- [x] PDF 元数据提取（零存储，直接从 PDF 提取会议和机构信息）
+- [x] S/A/B 分级推荐 + 中文翻译
+- [x] 论文收藏与导入功能
+- [x] 数据分析与可视化（质量统计、发表趋势、关键词热力图）
+- [x] 导出功能（从抓取列表导出到笔记库）
+
+#### 🚀 规划中功能
+
+- [ ] 批量论文上传
+- [ ] 论文引用关系图谱
+- [ ] 跨论文知识图谱构建
+- [ ] 自定义 Prompt 模板
+- [ ] 团队协作与共享
 
 ### 📁 项目结构
 
@@ -364,19 +387,42 @@ See [Auto-Scholar Guide](docs/guides/AUTO_SCHOLAR_GUIDE.md) for details.
 | Visualization | Mermaid.js + Plotly | Mind maps & data charts |
 | Academic API | Arxiv API | Paper crawling & metadata |
 
-### 📋 Roadmap
+### 📋 Feature Roadmap
 
-- [x] Core features: PDF parsing, structured summary, mind map, smart tags
-- [x] RAG Q&A with @mention syntax
-- [x] Auto-Scholar paper monitoring (multi-layer filtering, conference & institution recognition)
-- [x] PDF metadata extraction (conference & institution info)
-- [x] Enhanced tag management (hierarchy, merge, duplicate detection)
-- [x] Content editing (notes, images)
-- [x] Data analytics & visualization (quality statistics, publication trends, heatmaps)
-- [ ] Batch upload
-- [ ] Export (Markdown/PDF)
-- [ ] Citation graph
-- [ ] Multi-language support
+#### ✅ Completed Features
+
+**Paper Management & Analysis**
+- [x] Smart PDF parsing (text, images, metadata extraction)
+- [x] 8-dimension structured summary (problem, methodology, results, future work, etc.)
+- [x] Auto mind map generation (Mermaid.js visualization)
+- [x] 3-dimension smart tag system (Domain/Method/Task)
+- [x] Hierarchical tag management (parent-child, merge, deduplication)
+- [x] Content editing (note editing, image upload & annotation)
+
+**Smart Q&A & Retrieval**
+- [x] RAG vector search Q&A (ChromaDB-based)
+- [x] @mention syntax (query specific papers)
+- [x] Multi-paper comparison
+- [x] Source attribution & citation
+
+**Auto-Scholar Paper Monitoring**
+- [x] Arxiv auto-crawling & keyword filtering
+- [x] 4-layer smart filtering (Keywords → Metadata scoring → PDF extraction → AI deep scoring)
+- [x] Top conference recognition (40+ conferences: ICLR, NeurIPS, CVPR, etc.)
+- [x] Prestigious institution recognition (100+ institutions: MIT, Stanford, Tsinghua, Zhejiang, etc.)
+- [x] PDF metadata extraction (zero storage, extract conference & institution info directly from PDF)
+- [x] S/A/B tier recommendations + Chinese translation
+- [x] Paper favorites & import functionality
+- [x] Data analytics & visualization (quality statistics, publication trends, keyword heatmaps)
+- [x] Export functionality (export from crawl list to note library)
+
+#### 🚀 Planned Features
+
+- [ ] Batch paper upload
+- [ ] Citation relationship graph
+- [ ] Cross-paper knowledge graph
+- [ ] Custom prompt templates
+- [ ] Team collaboration & sharing
 
 ### 📖 Documentation
 
