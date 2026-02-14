@@ -50,6 +50,7 @@ class ArxivCrawler:
         print(f"🔍 查询关键词: {', '.join(keywords[:5])}...")
 
         papers = []
+        duplicates = 0  # 记录去重数量
         try:
             # 使用 arxiv 库搜索
             search = arxiv.Search(
@@ -66,6 +67,7 @@ class ArxivCrawler:
 
                 # 检查是否已存在
                 if db_manager.get_arxiv_paper_by_arxiv_id(result.entry_id.split('/')[-1]):
+                    duplicates += 1
                     continue
 
                 # 提取作者及其机构信息
@@ -89,7 +91,10 @@ class ArxivCrawler:
                 }
                 papers.append(paper_data)
 
-            print(f"✓ 成功抓取 {len(papers)} 篇新论文")
+            if duplicates > 0:
+                print(f"✓ 成功抓取 {len(papers)} 篇新论文（已过滤 {duplicates} 篇重复论文）")
+            else:
+                print(f"✓ 成功抓取 {len(papers)} 篇新论文")
             return papers
 
         except Exception as e:

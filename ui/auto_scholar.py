@@ -176,9 +176,10 @@ def show_papers_list():
                     progress_callback=update_ui
                 )
             else:  # 昨天到目前模式
-                # 昨天 00:00 到今天 23:59
-                yesterday = datetime.now() - timedelta(days=1)
-                start_dt = datetime.combine(yesterday.date(), datetime.min.time())
+                # 最近2天：前天 00:00 到今天 23:59
+                # 这样可以确保抓到论文（考虑到 Arxiv 更新时间和时区差异）
+                two_days_ago = datetime.now() - timedelta(days=2)
+                start_dt = datetime.combine(two_days_ago.date(), datetime.min.time())
                 end_dt = datetime.combine(datetime.now().date(), datetime.max.time())
                 result = daily_scheduler.run_daily_pipeline(
                     max_results=500,
