@@ -15,6 +15,41 @@
 
 ## 环境变量配置
 
+### LLM API 配置
+
+PaperBrain 支持多种 LLM API 提供商：
+
+#### 1. Google Gemini API（推荐）
+
+```bash
+# Gemini API 配置
+GEMINI_API_KEY=your_gemini_api_key_here
+LLM_API_URL=https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
+LLM_BEARER_TOKEN=your_bearer_token_here
+```
+
+**获取方式**: 访问 [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+#### 2. 字节跳动豆包 API
+
+```bash
+# 豆包 API 配置（用于 Auto-Scholar 评分）
+DOUBAO_API_URL=https://ark.cn-beijing.volces.com/api/v3/chat/completions
+DOUBAO_BEARER_TOKEN=your_doubao_token_here
+```
+
+**获取方式**: 访问 [火山引擎控制台](https://console.volcengine.com/)
+
+#### 3. 自定义 API
+
+支持任何兼容 OpenAI 格式的 API：
+
+```bash
+# 自定义 API 配置
+LLM_API_URL=https://your-custom-api.com/v1/chat/completions
+LLM_BEARER_TOKEN=your_custom_token_here
+```
+
 ### 必需配置
 
 在 `.env` 文件中配置以下变量：
@@ -25,7 +60,7 @@ LLM_API_URL=https://your-api-endpoint.com/v1/chat/completions
 LLM_BEARER_TOKEN=your_bearer_token_here
 
 # Doubao API 配置（Auto-Scholar 功能必需）
-DOUBAO_API_URL=https://aigc.sankuai.com/v1/openai/native/chat/completions
+DOUBAO_API_URL=https://your-doubao-api-endpoint.com/v1/chat/completions
 DOUBAO_BEARER_TOKEN=your_doubao_token_here
 ```
 
