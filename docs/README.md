@@ -21,7 +21,7 @@
 
 ### 📝 版本历史
 - [主更新日志](CHANGELOG.md) - 所有版本汇总
-- [v1.4.0 更新日志](changelogs/v1.4.0/UPDATE_LOG.md) - 最新版本
+- [v1.5.0 更新日志](changelogs/v1.5.0/UPDATE_LOG.md) - 最新版本
 
 ---
 
@@ -56,7 +56,10 @@
 
 ### 版本详情
 
-#### v1.4.0 (2026-02-13) - 最新版本
+#### v1.5.0 (2026-02-28) - 最新版本
+- [更新日志](changelogs/v1.5.0/UPDATE_LOG.md) - API 设置页面与多格式 LLM 支持
+
+#### v1.4.0 (2026-02-13)
 - [更新日志](changelogs/v1.4.0/UPDATE_LOG.md) - 数据分析与可视化功能
 - [已知问题](changelogs/v1.4.0/KNOWN_ISSUES.md) - 当前版本已知问题
 - [调试日志](changelogs/v1.4.0/DEBUG_LOG.md) - 开发调试记录
@@ -78,6 +81,7 @@
 |------|------|
 | [顶会机构识别](features/VENUE_INSTITUTION.md) | 自动识别顶级会议和知名机构 |
 | [论文导入功能](features/IMPORT_FEATURE.md) | 从 Auto-Scholar 导入论文到主库 |
+| [API 设置与配置](features/API_SETTINGS.md) | 图形化 API 配置管理 |
 
 ---
 
@@ -86,6 +90,7 @@
 记录开发过程中的迭代、Bug 修复、计划等
 
 ### 迭代日志 (iteration_logs/)
+- [2026-02-28](development/iteration_logs/2026-02-28.md) - v1.5.0 API 设置页面
 - [2026-02-13](development/iteration_logs/2026-02-13.md) - v1.4.0 开发迭代
 
 ### Bug 修复日志 (bugfix_logs/)
@@ -168,5 +173,5 @@
 
 ---
 
-**最后更新**: 2026-02-14
+**最后更新**: 2026-02-28
 **维护者**: PaperBrain Team

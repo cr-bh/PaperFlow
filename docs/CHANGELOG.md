@@ -4,6 +4,28 @@
 
 ---
 
+## [v1.5.0] - 2026-02-28
+
+### ✨ 新增功能
+- 图形化 API 设置页面，支持标准提供商预设和自定义 API 两种接入方式
+- 预设六大主流 API 提供商：DeepSeek、通义千问、OpenAI、Moonshot、智谱 GLM、SiliconFlow
+- 双 LLM 角色配置（主 LLM + 评分 LLM），评分 LLM 默认复用主 LLM
+- 一键测试连接功能
+- 配置持久化至 JSON 文件，保存后热加载无需重启
+
+### 🚀 性能优化
+- 统一 LLM 服务层，同时支持 OpenAI 兼容和 Gemini 两种 API 格式
+- DoubaoService 简化为 LLMService 子类，消除重复代码
+- 延迟验证机制：未配置 API 时应用可正常启动，首次调用时提示配置
+
+### 📚 文档更新
+- 新增 API 设置功能说明文档
+- 新增迭代日志
+
+详细内容请参考 [v1.5.0 更新日志](changelogs/v1.5.0/UPDATE_LOG.md)
+
+---
+
 ## [v1.3.1] - 2026-02-13
 
 ### 🐛 Bug 修复
