@@ -96,6 +96,9 @@
 ### Bug 修复日志 (bugfix_logs/)
 - [2026-02-12](development/bugfix_logs/2026-02-12.md) - v1.1.1 Bug 修复
 
+### 开发指南
+- [双仓库管理指南](development/REPO_MANAGEMENT_GUIDE.md) - 私有/公开仓库管理与推送流程
+
 ### 开发计划 (plans/)
 - 暂无
 
