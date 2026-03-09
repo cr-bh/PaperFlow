@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠 PaperBrain
+# 🧠 PaperFlow
 
 **智能论文笔记与知识库助手 | AI-Powered Academic Paper Management System**
 
