@@ -102,8 +102,8 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-repo/paperbrain.git
-cd paperbrain
+git clone https://github.com/your-repo/paperflow.git
+cd paperflow
 
 # 2. 安装依赖
 pip install -r requirements.txt
@@ -269,7 +269,7 @@ streamlit run app.py
 ### 📁 项目结构
 
 ```
-paperbrain/
+paperflow/
 ├── app.py                          # 应用入口
 ├── config.py                       # 配置管理
 ├── config/                         # 配置模块
@@ -442,7 +442,7 @@ pip install streamlit-mermaid
 
 ```bash
 # 1. Clone
-git clone https://github.com/your-repo/paperbrain.git && cd paperbrain
+git clone https://github.com/your-repo/paperflow.git && cd paperflow
 
 # 2. Install
 pip install -r requirements.txt
